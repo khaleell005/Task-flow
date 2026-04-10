@@ -103,6 +103,58 @@ Task-Flow/
 - Firefox 85+
 - Safari 14+
 
+## Decisions Made
+
+### Single-file architecture
+Everything lives in one index.html. No framework, no bundler, no Node. This keeps the project zero-dependency and instantly runnable by anyone — just open the file. For a component-scale task like this, a React or Vue setup would have been over-engineering.
+
+### Vanilla JS over a framework
+The task spec called for testability and semantic HTML correctness, not component reactivity. Vanilla JS gave full control over the DOM and data-testid attributes without any abstraction layer interfering with the automated tests.
+
+### Modal-driven add/edit flow
+Rather than inline editing or separate pages, a modal form was chosen for both adding and editing tasks. This keeps the card list clean and readable while giving users a focused, distraction-free space to fill in all required fields. It also mirrors patterns used in real-world tools like Asana and Linear.
+
+### Teal + white colour palette
+Teal (#1D9E75, #0F6E56) was chosen as the primary accent against white cards and a deep teal background (#0a2e2b). This gives strong contrast, passes WCAG AA, and creates a calm but focused productivity feel — deliberately distinct from the generic purple/blue AI aesthetic.
+
+### Real `<input type="checkbox">`
+The spec explicitly required either a real checkbox or a role="checkbox" button. A native `<input type="checkbox">` was used because it comes with built-in keyboard support (Space to toggle), focus management, and screen reader announcements for free — no JavaScript needed for those behaviours.
+
+### `<time>` element with datetime attribute
+Both the due date and time remaining use the `<time>` element with a machine-readable datetime attribute. This improves SEO and screen reader output — assistive tech can announce dates in the user's preferred locale format.
+
+### Tag system
+Tags are stored as plain string arrays per task. Users can add tags via the modal input and remove them by clicking. Each rendered tag maps to a `<li>` inside a `<ul role="list">` for correct semantics, with data-testid attributes on work and urgent tags as required.
+
+### Live time remaining
+Calculated from Date.now() vs the task's due date on every render, plus a setInterval refresh every 60 seconds. The output element is wrapped in aria-live="polite" so screen readers announce updates without interrupting the user.
+
+### Header stats bar
+Total, Pending, and Done counts are derived directly from the task array on every render — no separate state to keep in sync. Simple and reliable.
+
+## Trade-offs
+
+| Decision | Trade-off |
+|----------|-----------|
+| Single HTML file | Easy to run and share, but doesn't scale to a multi-page app. Would be split into components in a real codebase. |
+| No localStorage | Tasks reset on page refresh. Kept out deliberately to avoid scope creep in Stage 0 — straightforward to add later. |
+| No backend | All data is in-memory JS arrays. A real app would hit an API. |
+| Inline JS event handlers (onclick="...") | Slightly less clean than addEventListener but keeps the code readable without module scope issues in a single-file setup. |
+| CSS in a `<style>` block | Works fine for one file. In production this would be a separate stylesheet or CSS modules. |
+| No drag-to-reorder | Intentionally deferred — adds complexity and wasn't in the Stage 0 requirements. |
+
+## Accessibility Checklist
+
+- All data-testid attributes present and correctly named
+- Real `<input type="checkbox">` with linked `<label>` and aria-label
+- All buttons have accessible names (visible text + aria-label)
+- Priority and status badges have aria-label
+- Time remaining wrapped in aria-live="polite"
+- Semantic HTML: `<article>`, `<h2>`, `<p>`, `<time>`, `<ul role="list">`, `<button>`
+- Visible focus styles on all interactive elements
+- Fully keyboard navigable (Tab → checkbox → Edit → Delete)
+- WCAG AA colour contrast on all text
+
 ## License
 
 MIT
