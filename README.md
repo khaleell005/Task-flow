@@ -2,16 +2,21 @@
 
 A lightweight, single-page task management application with a clean, modern interface. Built with vanilla HTML, CSS, and JavaScript.
 
+**Stage 1** - Enhanced interactive Todo Card with inline editing, status transitions, priority indicators, and expand/collapse behavior.
+
 ## Features
 
 - **Task Management** - Create, edit, delete, and complete tasks
-- **Priority Levels** - Low (0), Medium (1), and High (2) with color-coded badges
-- **Status Tracking** - Pending, In Progress, and Done
-- **Due Dates** - Visual countdown with color-coded urgency indicators
+- **Inline Edit Mode** - Edit tasks directly on the card with a form overlay
+- **Priority Levels** - Low (0), Medium (1), and High (2) with color-coded badges and visual indicators
+- **Status Transitions** - Pending, In Progress, and Done with dropdown control
+- **Due Dates** - Granular countdown with color-coded urgency indicators
+- **Expand/Collapse** - Long descriptions can be collapsed with a toggle
+- **Overdue Indicators** - Explicit visual badge when tasks are overdue
 - **Tags** - Add up to 8 custom tags per task
 - **Statistics Dashboard** - Quick overview of Total, Pending, and Done tasks
-- **Accessibility** - ARIA labels, keyboard support (Escape to close), focus management
-- **Data-testid attributes** - Ready for automated testing
+- **Accessibility** - ARIA labels, keyboard support, focus management
+- **Data-testid attributes** - Ready for automated testing (Stage 0 + Stage 1 testids)
 
 ## Getting Started
 
@@ -38,36 +43,83 @@ Then navigate to `http://localhost:8000`
 3. Optionally add description, status, and tags
 4. Click **Add Task**
 
-### Edit a Task
+### Edit a Task (Inline)
 1. Click the **Edit** button on any task card
-2. Modify the details in the modal form
-3. Click **Save Changes**
+2. The inline edit form appears below the task
+3. Modify title, description, priority, or due date
+4. Click **Save Changes** or **Cancel**
 
-### Delete a Task
-1. Click the **Delete** button on any task card
+### Status Transitions
+- Use the **status dropdown** below the task to change status
+- Toggling the **checkbox** automatically sets status to "Done"
+- Setting status to "Done" automatically checks the checkbox
+- Unchecking checkbox reverts status to "Pending"
 
 ### Complete a Task
 - Toggle the checkbox on any task to mark it complete/incomplete
+- When complete, the task shows muted styling with strikethrough
+
+### Expand/Collapse Description
+- Long descriptions (>120 characters) are collapsed by default
+- Click **"Show more"** to expand and **"Show less"** to collapse
+- Toggle is keyboard accessible
 
 ### Keyboard Shortcuts
 - **Escape** - Close the modal
+- **Tab** - Navigate between form fields
+- **Space/Enter** - Activate buttons and toggles
+
+## Data-testid Attributes
+
+### Stage 0 Testids (Preserved)
+| Element | testid |
+|---------|--------|
+| Task card | `test-todo-card` |
+| Checkbox toggle | `test-todo-complete-toggle` |
+| Task title | `test-todo-title` |
+| Description | `test-todo-description` |
+| Priority badge | `test-todo-priority` |
+| Status badge | `test-todo-status` |
+| Due date | `test-todo-due-date` |
+| Time remaining | `test-todo-time-remaining` |
+| Tags list | `test-todo-tags` |
+| Edit button | `test-todo-edit-button` |
+| Delete button | `test-todo-delete-button` |
+
+### Stage 1 Testids (New)
+| Element | testid |
+|---------|--------|
+| Edit form container | `test-todo-edit-form` |
+| Title input | `test-todo-edit-title-input` |
+| Description textarea | `test-todo-edit-description-input` |
+| Priority select | `test-todo-edit-priority-select` |
+| Due date input | `test-todo-edit-due-date-input` |
+| Save button | `test-todo-save-button` |
+| Cancel button | `test-todo-cancel-button` |
+| Status control | `test-todo-status-control` |
+| Priority indicator | `test-todo-priority-indicator` |
+| Expand toggle | `test-todo-expand-toggle` |
+| Collapsible section | `test-todo-collapsible-section` |
+| Overdue indicator | `test-todo-overdue-indicator` |
 
 ## Color Guide
 
 ### Priority Colors
-| Priority | Badge Class | Color |
-|----------|-------------|-------|
-| High (2) | badge-high | Red (#993C1D on #FAECE7) |
-| Medium (1) | badge-medium | Orange (#854F0B on #FAEEDA) |
-| Low (0) | badge-low | Green (#085041 on #E1F5EE) |
+| Priority | Badge | Indicator Dot | Border Accent |
+|----------|-------|--------------|---------------|
+| High (2) | Red (#993C1D) | Red dot | Red left border |
+| Medium (1) | Orange (#854F0B) | Orange dot | - |
+| Low (0) | Green (#085041) | Green dot | - |
 
 ### Due Date Indicators
 | Time Remaining | Badge Class | Color |
 |----------------|-------------|-------|
 | Overdue | tr-overdue | Red (#A32D2D on #FCEBEB) |
-| Due today/within 24h | tr-today | Orange (#993C1D on #FAECE7) |
-| Tomorrow - 5 days | tr-soon | Yellow (#854F0B on #FAEEDA) |
-| 6+ days | tr-future | Green (#0F6E56 on #E1F5EE) |
+| Due now - 1 hour | tr-today | Orange |
+| 1-24 hours | tr-today | Orange |
+| Tomorrow - 5 days | tr-soon | Yellow |
+| 6+ days | tr-future | Green |
+| Completed | tr-completed | Gray |
 
 ## Project Structure
 
@@ -83,6 +135,7 @@ Task-Flow/
 - **Architecture**: Single-file application (all code embedded in index.html)
 - **State Management**: In-memory JavaScript array with global variables
 - **Data Persistence**: None (data resets on page reload)
+- **Time Updates**: Every 30 seconds via setInterval
 - **Task Data Model**:
   ```javascript
   {
@@ -93,7 +146,8 @@ Task-Flow/
     status: "Pending" | "In Progress" | "Done",
     due: Date,
     tags: string[],
-    done: boolean
+    done: boolean,
+    expanded: boolean
   }
   ```
 
@@ -103,56 +157,79 @@ Task-Flow/
 - Firefox 85+
 - Safari 14+
 
-## Decisions Made
+## What's New in Stage 1
 
-### Single-file architecture
-Everything lives in one index.html. No framework, no bundler, no Node. This keeps the project zero-dependency and instantly runnable by anyone — just open the file. For a component-scale task like this, a React or Vue setup would have been over-engineering.
+### Inline Edit Mode
+Replaced modal-only editing with inline form editing directly on the task card. The edit form includes all required fields with proper testids.
 
-### Vanilla JS over a framework
-The task spec called for testability and semantic HTML correctness, not component reactivity. Vanilla JS gave full control over the DOM and data-testid attributes without any abstraction layer interfering with the automated tests.
+### Status Transitions
+Added a status dropdown control that:
+- Syncs bidirectionally with the checkbox
+- Allows explicit status changes without toggling completion
+- Updates all visual indicators immediately
 
-### Modal-driven add/edit flow
-Rather than inline editing or separate pages, a modal form was chosen for both adding and editing tasks. This keeps the card list clean and readable while giving users a focused, distraction-free space to fill in all required fields. It also mirrors patterns used in real-world tools like Asana and Linear.
+### Priority Visual Indicators
+Added multiple visual indicators for priority:
+- Color-coded badge
+- Priority dot next to the badge
+- Left border accent on high-priority cards
 
-### Teal + white colour palette
-Teal (#1D9E75, #0F6E56) was chosen as the primary accent against white cards and a deep teal background (#0a2e2b). This gives strong contrast, passes WCAG AA, and creates a calm but focused productivity feel — deliberately distinct from the generic purple/blue AI aesthetic.
+### Expand/Collapse Behavior
+Descriptions over 120 characters are collapsed by default with a "Show more/less" toggle button that is keyboard accessible.
 
-### Real `<input type="checkbox">`
-The spec explicitly required either a real checkbox or a role="checkbox" button. A native `<input type="checkbox">` was used because it comes with built-in keyboard support (Space to toggle), focus management, and screen reader announcements for free — no JavaScript needed for those behaviours.
+### Enhanced Time Handling
+- Granular time display (minutes, hours, days)
+- Explicit "Overdue" badge when past due
+- Time stops updating for completed tasks
+- Updates every 30 seconds
 
-### `<time>` element with datetime attribute
-Both the due date and time remaining use the `<time>` element with a machine-readable datetime attribute. This improves SEO and screen reader output — assistive tech can announce dates in the user's preferred locale format.
+### Visual State Changes
+| State | Visual Treatment |
+|-------|-----------------|
+| Done | Strikethrough title, muted colors, reduced opacity |
+| High Priority | Red dot, red border accent |
+| Overdue | Red border, "Overdue" badge |
+| In Progress | Standard styling with status badge |
 
-### Tag system
-Tags are stored as plain string arrays per task. Users can add tags via the modal input and remove them by clicking. Each rendered tag maps to a `<li>` inside a `<ul role="list">` for correct semantics, with data-testid attributes on work and urgent tags as required.
+## Design Decisions
 
-### Live time remaining
-Calculated from Date.now() vs the task's due date on every render, plus a setInterval refresh every 60 seconds. The output element is wrapped in aria-live="polite" so screen readers announce updates without interrupting the user.
+### Inline vs Modal Editing
+Stage 1 uses inline editing on the card rather than only modal editing. This allows quick edits without leaving context of the task list. Modal editing is still available for complex edits via the New Task button.
 
-### Header stats bar
-Total, Pending, and Done counts are derived directly from the task array on every render — no separate state to keep in sync. Simple and reliable.
+### Segmented vs Dropdown Status Control
+A dropdown select was chosen over segmented buttons because:
+- More room on the card for other content
+- Easier to add more statuses later
+- Native select is keyboard accessible out of the box
 
-## Trade-offs
+### Expand/Collapse Threshold
+120 characters was chosen as the collapse threshold. This keeps short descriptions readable while preventing very long task descriptions from dominating the card list.
 
-| Decision | Trade-off |
-|----------|-----------|
-| Single HTML file | Easy to run and share, but doesn't scale to a multi-page app. Would be split into components in a real codebase. |
-| No localStorage | Tasks reset on page refresh. Kept out deliberately to avoid scope creep in Stage 0 — straightforward to add later. |
-| No backend | All data is in-memory JS arrays. A real app would hit an API. |
-| Inline JS event handlers (onclick="...") | Slightly less clean than addEventListener but keeps the code readable without module scope issues in a single-file setup. |
-| CSS in a `<style>` block | Works fine for one file. In production this would be a separate stylesheet or CSS modules. |
-| No drag-to-reorder | Intentionally deferred — adds complexity and wasn't in the Stage 0 requirements. |
+### Time Update Interval
+30 seconds was chosen for Stage 1 (reduced from 60 seconds in Stage 0) to provide more responsive time updates without excessive DOM updates.
+
+## Known Limitations
+
+- No localStorage persistence
+- No drag-to-reorder
+- No keyboard focus trap in edit form
+- Modal and inline edit both exist (potential for UX confusion)
 
 ## Accessibility Checklist
 
-- All data-testid attributes present and correctly named
+- All Stage 0 testids preserved
+- All Stage 1 testids added with correct naming
 - Real `<input type="checkbox">` with linked `<label>` and aria-label
-- All buttons have accessible names (visible text + aria-label)
+- All buttons have accessible names
 - Priority and status badges have aria-label
+- Priority indicator has aria-hidden and title for context
 - Time remaining wrapped in aria-live="polite"
-- Semantic HTML: `<article>`, `<h2>`, `<p>`, `<time>`, `<ul role="list">`, `<button>`
+- Overdue indicator announced with aria-label
+- Expand toggle has aria-expanded and aria-controls
+- Status control has proper label association
+- Inline form has role="form" and aria-label
 - Visible focus styles on all interactive elements
-- Fully keyboard navigable (Tab → checkbox → Edit → Delete)
+- Fully keyboard navigable
 - WCAG AA colour contrast on all text
 
 ## License
